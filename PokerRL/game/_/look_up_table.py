@@ -7,6 +7,7 @@ from scipy.special import comb
 from PokerRL.game.Poker import Poker
 from PokerRL.game.PokerRange import PokerRange
 from PokerRL.game._.cpp_wrappers.CppLUT import CppLibHoldemLuts
+from PokerRL.game._.cpp_wrappers.CppNumeral211LUT import CppLibNumeral211Luts
 
 
 class _LutGetterBase:
@@ -187,6 +188,83 @@ class _LutGetterLeduc(_LutGetterBase):
         card_2d[1] = card_1d % self.rules.N_SUITS
         return card_2d
 
+class _LutGetterNumeral211(_LutGetterBase):
+    def __init__(self, env_cls):
+        super().__init__(rules=env_cls.RULES)
+        self.cpp_backend = CppLibNumeral211Luts()
+
+    def get_1d_card_2_2d_card_LUT(self):
+        # 创建 1D 牌值数组，范围是 [0, 1, ..., 51]
+        cards_1d = np.arange(self.rules.N_CARDS_IN_DECK, dtype=np.int8)
+        # 调用 C++ 的批量转换函数
+        lut = self.cpp_backend.batch_get_2d_card(cards_1d) 
+        return lut
+
+    def get_2d_card_2_1d_card_LUT(self):
+        # [[ 0  0]
+        #  [ 0  1]
+        #  [ 0  2]
+        #  [ 0  3]
+        #  [ 1  0]
+        #  [ 1  1]
+        #  [ 1  2]
+        #  [ 1  3]
+        #  [ 2  0]
+        #  [ 2  1]
+        #  [ 2  2]
+        #  [ 2  3]
+        #  [ 3  0]
+        #  [ 3  1]
+        #  [ 3  2]
+        #  [ 3  3]
+        #  [ 4  0]
+        #  [ 4  1]
+        #  [ 4  2]
+        #  [ 4  3]
+        #  [ 5  0]
+        #  [ 5  1]
+        #  [ 5  2]
+        #  [ 5  3]
+        #  [ 6  0]
+        #  [ 6  1]
+        #  [ 6  2]
+        #  [ 6  3]
+        #  [ 7  0]
+        #  [ 7  1]
+        #  [ 7  2]
+        #  [ 7  3]
+        #  [ 8  0]
+        #  [ 8  1]
+        #  [ 8  2]
+        #  [ 8  3]
+        #  [ 9  0]
+        #  [ 9  1]
+        #  [ 9  2]
+        #  [ 9  3]]
+        cards_2d = np.indices((self.rules.N_RANKS, self.rules.N_SUITS), dtype=np.int8).reshape(2, -1).T.copy()
+        lut = self.cpp_backend.batch_get_1d_card(cards_2d).reshape(self.rules.N_RANKS, self.rules.N_SUITS)
+        return lut
+
+    def get_idx_2_hole_card_LUT(self):
+        return self.cpp_backend.get_idx_2_hole_card_lut()
+
+    def get_hole_card_2_idx_LUT(self):
+        return self.cpp_backend.get_hole_card_2_idx_lut()
+
+    def get_card_in_what_range_idxs_LUT(self):
+        lut = np.full(shape=(self.rules.N_CARDS_IN_DECK, self.rules.N_CARDS_IN_DECK - 1), fill_value=-2,
+                      dtype=np.int32)
+
+        _idx2hc_lut = self.get_idx_2_hole_card_LUT()
+        for c in range(self.rules.N_CARDS_IN_DECK):
+            n = 0
+            for range_idx in range(self.rules.RANGE_SIZE):
+                if c in _idx2hc_lut[range_idx]:
+                    lut[c, n] = range_idx
+                    n += 1
+
+        assert not np.any(lut == -2)
+        return lut
 
 class _LutHolderBase:
     """ abstract """
@@ -301,6 +379,29 @@ class LutHolderHoldem(_LutHolderBase):
 
     def __init__(self, env_cls):
         super().__init__(lut_getter=_LutGetterHoldem(env_cls=env_cls))
+
+    def get_range_idx_from_hole_cards(self, hole_cards_2d):
+        _c1 = self.LUT_2DCARD_2_1DCARD[hole_cards_2d[0, 0]][hole_cards_2d[0, 1]]
+        _c2 = self.LUT_2DCARD_2_1DCARD[hole_cards_2d[1, 0]][hole_cards_2d[1, 1]]
+
+        # c1 can never equal c2
+        c1 = min(_c1, _c2)
+        c2 = max(_c1, _c2)
+
+        return self.LUT_HOLE_CARDS_2_IDX[c1, c2]
+
+    def get_2d_hole_cards_from_range_idx(self, range_idx):
+        c1 = self.LUT_IDX_2_HOLE_CARDS[range_idx, 0]
+        c2 = self.LUT_IDX_2_HOLE_CARDS[range_idx, 1]
+
+        return np.array([self.LUT_1DCARD_2_2DCARD[c1], self.LUT_1DCARD_2_2DCARD[c2]], dtype=np.int8)
+
+    def get_1d_hole_cards_from_range_idx(self, range_idx):
+        return np.copy(self.LUT_IDX_2_HOLE_CARDS[range_idx])
+
+class LutHolderNumeral211(_LutHolderBase):
+    def __init__(self, env_cls):
+        super().__init__(lut_getter=_LutGetterNumeral211(env_cls=env_cls))
 
     def get_range_idx_from_hole_cards(self, hole_cards_2d):
         _c1 = self.LUT_2DCARD_2_1DCARD[hole_cards_2d[0, 0]][hole_cards_2d[0, 1]]

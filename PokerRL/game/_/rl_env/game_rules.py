@@ -310,3 +310,79 @@ class FlopHoldemRules:
         from PokerRL.game._.look_up_table import LutHolderHoldem
 
         return LutHolderHoldem(cls)
+
+class Numeral211Rules:
+    """
+    General rules of Numeral 211 poker games
+    """
+    N_HOLE_CARDS = 2
+    N_RANKS = 10
+    N_SUITS = 4
+    N_CARDS_IN_DECK = N_RANKS * N_SUITS
+    RANGE_SIZE = PokerRange.get_range_size(n_hole_cards=N_HOLE_CARDS, n_cards_in_deck=N_CARDS_IN_DECK)
+
+    BTN_IS_FIRST_POSTFLOP = False
+
+    N_FLOP_CARDS = 1
+    N_TURN_CARDS = 1
+    N_RIVER_CARDS = 0
+    N_TOTAL_BOARD_CARDS = N_FLOP_CARDS + N_TURN_CARDS + N_RIVER_CARDS
+    ALL_ROUNDS_LIST = [Poker.PREFLOP, Poker.FLOP, Poker.TURN]
+
+    SUITS_MATTER = True
+
+    ROUND_BEFORE = {
+        Poker.PREFLOP: Poker.PREFLOP,
+        Poker.FLOP: Poker.PREFLOP,
+        Poker.TURN: Poker.FLOP
+    }
+    ROUND_AFTER = {
+        Poker.PREFLOP: Poker.FLOP,
+        Poker.FLOP: Poker.TURN,
+        Poker.TURN: None,
+    }
+
+    RANK_DICT = {
+        Poker.CARD_NOT_DEALT_TOKEN_1D: "",
+        0: "2",
+        1: "3",
+        2: "4",
+        3: "5",
+        4: "6",
+        5: "7",
+        6: "8",
+        7: "9",
+        8: "T",
+        9: "A"
+    }
+    SUIT_DICT = {
+        Poker.CARD_NOT_DEALT_TOKEN_1D: "",
+        0: "s",
+        1: "h",
+        2: "d",
+        3: "c"
+    }
+
+    STRING = "NUMERAL_211_RULES"
+
+    def __init__(self):
+        from PokerRL.game._.cpp_wrappers.CppNumeral211Handeval import CppNumeral211Handeval
+
+        self._clib = CppNumeral211Handeval()
+
+    def get_hand_rank_all_hands_on_given_boards(self, boards_1d, lut_holder):
+        """
+        for docs refer to PokerEnv
+        """
+        return self._clib.get_hand_rank_all_hands_on_given_boards_numeral211(boards_1d=boards_1d, lut_holder=lut_holder)
+
+    def get_hand_rank(self, hand_2d, board_2d):
+        """
+        for docs refer to PokerEnv
+        """
+        return self._clib.get_hand_rank_numeral211(hand_2d=hand_2d, board_2d=board_2d)
+
+    @classmethod
+    def get_lut_holder(cls):
+        from PokerRL.game._.look_up_table import LutHolderNumeral211
+        return LutHolderNumeral211(cls)

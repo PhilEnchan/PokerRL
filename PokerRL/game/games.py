@@ -6,7 +6,7 @@ A collection of Poker games often used in computational poker research.
 """
 
 from PokerRL.game.Poker import Poker
-from PokerRL.game._.rl_env.game_rules import HoldemRules, LeducRules, FlopHoldemRules, BigLeducRules
+from PokerRL.game._.rl_env.game_rules import HoldemRules, LeducRules, FlopHoldemRules, BigLeducRules, Numeral211Rules
 from PokerRL.game._.rl_env.poker_types.DiscretizedPokerEnv import DiscretizedPokerEnv
 from PokerRL.game._.rl_env.poker_types.LimitPokerEnv import LimitPokerEnv
 from PokerRL.game._.rl_env.poker_types.NoLimitPokerEnv import NoLimitPokerEnv
@@ -253,6 +253,40 @@ class Flop5Holdem(FlopHoldemRules, LimitPokerEnv):
     def _adjust_raise(self, raise_total_amount_in_chips):
         return self.get_fraction_of_pot_raise(fraction=1.0, player_that_bets=self.current_player)
 
+class Numeral211(Numeral211Rules, LimitPokerEnv):
+    """
+    Fixed-Limit Texas Hold'em is a long-standing benchmark game that has been essentially solved by Bowling et al
+    (http://science.sciencemag.org/content/347/6218/145) using an efficient distributed implementation of CFR+, an
+    optimized version of regular CFR.
+    """
+
+    RULES = Numeral211Rules
+    IS_FIXED_LIMIT_GAME = True
+    IS_POT_LIMIT_GAME = False
+    MAX_N_RAISES_PER_ROUND = {
+        Poker.PREFLOP: 4,
+        Poker.FLOP: 4,
+        Poker.TURN: 4,
+    }
+    ROUND_WHERE_BIG_BET_STARTS = Poker.FLOP
+
+    SMALL_BLIND = 0
+    BIG_BLIND = 0
+    ANTE = 20
+    SMALL_BET = 20
+    BIG_BET = 40
+    DEFAULT_STACK_SIZE = 500
+
+    EV_NORMALIZER = 1000.0 / ANTE  # Milli BB
+    WIN_METRIC = Poker.MeasureAnte
+
+    def __init__(self, env_args, lut_holder, is_evaluating):
+        Numeral211Rules.__init__(self)
+        LimitPokerEnv.__init__(self,
+                               env_args=env_args,
+                               lut_holder=lut_holder,
+                               is_evaluating=is_evaluating)
+
 
 """
 register all new envs here!
@@ -266,4 +300,5 @@ ALL_ENVS = [
     NoLimitHoldem,
     DiscretizedNLHoldem,
     Flop5Holdem,
+    Numeral211,
 ]

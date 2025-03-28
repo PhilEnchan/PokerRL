@@ -1,0 +1,6 @@
+============================= test session starts ==============================
+platform linux -- Python 3.8.12, pytest-7.4.4, pluggy-0.12.0
+rootdir: /mnt/d/Workspace/python/PokerRL
+collected 2 items
+
+test/game/test_tree.py 
