@@ -63,8 +63,8 @@
 //  [12  2]
 //  [12  3]]
 
-// g++ -shared -o PokerRL/game/_/cpp_wrappers/lib_numeral211_hand_eval.so -fPIC Numeral211CppTool/numeral211_hand_eval.cpp -pthread
-// g++ -shared -o PokerRL/game/_/cpp_wrappers/lib_numeral211_hand_eval.so -fPIC Numeral211CppTool/numeral211_hand_eval.cpp -pthread -DDEBUG
+// g++ -shared -o PokerRL/game/_/cpp_wrappers/lib_numeral211_hand_eval.so -fPIC Numeral211CppTool/numeral211_hand_eval.cpp -std=c++17 -pthread
+// g++ -shared -o PokerRL/game/_/cpp_wrappers/lib_numeral211_hand_eval.so -fPIC Numeral211CppTool/numeral211_hand_eval.cpp -std=c++17 -pthread -DDEBUG
 
 
 #include <mutex>
@@ -72,20 +72,27 @@
 #include <fstream>
 #include <array>
 #include <cassert>
+#include <filesystem>
 
 #include "numeral211.h"
 
 const int LUT_LENGTH = 15593606;
 static std::array<int32_t, LUT_LENGTH> lookup;
 std::once_flag flag;
-const int8_t CARD_NOT_DEALT_TOKEN = -127;
+const int8_t CARD_NOT_DEALT_TOKEN = -1;
+std::string filePath;
 
 void load_lut() {
+    // 获取当前工作目录
+    // std::filesystem::path currentPath = std::filesystem::current_path();
+    // // 打印当前工作目录
+    // std::cout << "Current directory: " << currentPath << std::endl;
+    std::cout << "file path: " << filePath << std::endl;
     uint16_t num = 1;
     bool isLittleEndian = *reinterpret_cast<uint8_t*>(&num) == 1;
     std::cout<<"isLittleEndian: "<< isLittleEndian<<std::endl;
     
-    const std::string filePath = "Numeral211CppTool/RhodeIslandHandRanks.dat";
+    // const std::string filePath = "RhodeIslandHandRanks.dat";
     std::ifstream file(filePath, std::ios::binary);
     if (!file.is_open()) {
         throw std::runtime_error("Couldn't open file: " + filePath);
@@ -122,7 +129,12 @@ void segfault_handler(int signum) {
         std::cerr << "Error: Unable to open segfault.log!" << std::endl;
         exit(1);
     }
-    fs << "Segmentation fault detected!" << std::endl;
+    if (signum == SIGSEGV) {
+        fs << "Segmentation fault (SIGSEGV) detected!" << std::endl;
+    } else if (signum == SIGABRT) {
+        fs << "Aborted (SIGABRT) detected!" << std::endl;
+    }
+
     if (last_hand_2d) {
         fs << "Last hand_2d: ";
         for (int k = 0; k< last_hand_len; ++k) {
@@ -159,30 +171,33 @@ void segfault_handler(int signum) {
         }
         fs << std::endl;
     }
+    fs << "dat file: " << filePath << std::endl;
     exit(1);
 }
 #endif
 
 // 导出 signal 处理函数，供 Python 端调用
-extern "C" void setup_signal_handler() {
+extern "C" void setup_signal_handler(const char* path) {
+    filePath = std::string(path);
 #ifdef DEBUG
     signal(SIGSEGV, segfault_handler);
+    signal(SIGABRT, segfault_handler);
 #endif
 }
 
 
 extern "C" int32_t get_hand_rank_numeral211(void* hand_2d_raw, void* board_2d_raw, int hand_len, int board_len) {
-    assert(hand_len == 2 && board_len == 2);
-
     const int8_t** hand_2d = static_cast<const int8_t**>(hand_2d_raw);
     const int8_t** board_2d = static_cast<const int8_t**>(board_2d_raw);
-
 #ifdef DEBUG
     last_board_2d = board_2d;
     last_hand_2d = hand_2d;
     last_board_len = board_len;
     last_hand_len = hand_len;
 #endif
+
+    assert(hand_len == 2 && board_len == 2);
+
 
     std::call_once(flag, load_lut);
 
@@ -219,11 +234,8 @@ extern "C" int32_t get_hand_rank_numeral211(void* hand_2d_raw, void* board_2d_ra
 }
 
 extern "C" void get_hand_rank_given_boards_dim0_hands_dim1_numeral211(void* boards_1d_raw, void* hands_1d_raw, int num_boards, int num_hands, int board_len, int hand_len, void* hand_ranks_raw) {
-    assert(board_len == 2 && hand_len == 2);
     const int8_t** boards_1d = static_cast<const int8_t**>(boards_1d_raw);
     const int8_t** hands_1d = static_cast<const int8_t**>(hands_1d_raw);
-    int32_t** hand_ranks = static_cast<int32_t**>(hand_ranks_raw);
-
 #ifdef DEBUG
     last_boards_1d = boards_1d;
     last_hands_1d = hands_1d;
@@ -232,6 +244,11 @@ extern "C" void get_hand_rank_given_boards_dim0_hands_dim1_numeral211(void* boar
     last_board_len = board_len;
     last_hand_len = hand_len;
 #endif
+
+    assert(board_len == 2 && hand_len == 2);
+
+    int32_t** hand_ranks = static_cast<int32_t**>(hand_ranks_raw);
+
     std::call_once(flag, load_lut);
 
     for (int i = 0; i < num_boards; ++i) {

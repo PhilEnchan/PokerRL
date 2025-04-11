@@ -12,8 +12,11 @@ from PokerRL.game._.rl_env.game_rules import Numeral211Rules
 
 class CppNumeral211Handeval(CppWrapper):
     def __init__(self):
-        super().__init__(path_to_dll=ospj(os.path.dirname(os.path.realpath(__file__)),
-                                          "lib_numeral211_hand_eval.so"))
+        dll_path = ospj(os.path.dirname(os.path.realpath(__file__)),
+                                    "lib_numeral211_hand_eval.so")
+        dat_path = ospj(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))),
+                                          "Numeral211CppTool/RhodeIslandHandRanks.dat")
+        super().__init__(path_to_dll=dll_path)
         self._clib.get_hand_rank_numeral211.argtypes = [
             self.ARR_2D_ARG_TYPE,
             self.ARR_2D_ARG_TYPE,
@@ -32,7 +35,9 @@ class CppNumeral211Handeval(CppWrapper):
             self.ARR_2D_ARG_TYPE
         ]
         self._clib.get_hand_rank_given_boards_dim0_hands_dim1_numeral211.restype = None
-        self._clib.setup_signal_handler()
+        
+        self._clib.setup_signal_handler.argtypes = [ctypes.c_char_p]
+        self._clib.setup_signal_handler(dat_path.encode('utf-8'))
     
     def get_hand_rank_numeral211(self, hand_2d, board_2d):
         """

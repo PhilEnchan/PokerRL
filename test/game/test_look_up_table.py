@@ -213,7 +213,6 @@ class TestLutHolderNumeral211(TestCase):
 
     def test_create(self):
         lh = Numeral211.get_lut_holder()
-
         assert lh.LUT_1DCARD_2_2DCARD.dtype == np.dtype(np.int8)
         assert lh.LUT_2DCARD_2_1DCARD.dtype == np.dtype(np.int8)
         assert lh.LUT_IDX_2_HOLE_CARDS.dtype == np.dtype(np.int8)

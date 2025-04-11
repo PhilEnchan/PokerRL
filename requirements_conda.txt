@@ -1,0 +1,12 @@
+gym==0.10.9
+pycrayon==0.5
+psutil
+
+conda create -n "deepcfr" python=3.8
+conda install pytorch==1.4.0 cudatoolkit=10.1 -c pytorch
+conda install numpy=1.19.2
+conda install scipy=1.5.2
+
+conda create -n "deepcfr" python=3.8
+conda install pytorch==1.5.1 torchvision==0.6.1 cudatoolkit=10.2 -c pytorch
+conda install scipy=1.5.2

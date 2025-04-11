@@ -37,7 +37,7 @@ class Poker:
 
     # The public board has this value wherever a card has not been dealt. 1D and 2D refers to the two different
     # representations of cards: as an int or as a tuple of (rank, suit) respectively.
-    CARD_NOT_DEALT_TOKEN_1D = -127
+    CARD_NOT_DEALT_TOKEN_1D = -1
     CARD_NOT_DEALT_TOKEN_2D = np.array([CARD_NOT_DEALT_TOKEN_1D,
                                         CARD_NOT_DEALT_TOKEN_1D])
 

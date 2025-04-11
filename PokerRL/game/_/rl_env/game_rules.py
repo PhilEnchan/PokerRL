@@ -70,7 +70,10 @@ class LeducRules:
         for docs refer to PokerEnv
         """
         if board_2d[0, 0] == hand_2d[0, 0]:
-            return 100 + hand_2d[0, 0]
+            if board_2d[0, 1] == hand_2d[0, 1]:
+                return -1
+            else:
+                return 10000 + hand_2d[0, 0]
         else:
             return hand_2d[0, 0]
 
@@ -135,7 +138,10 @@ class BigLeducRules:
         for docs refer to PokerEnv
         """
         if board_2d[0, 0] == hand_2d[0, 0]:
-            return 10000 + hand_2d[0, 0]
+            if board_2d[0, 1] == hand_2d[0, 1]:
+                return -1
+            else:
+                return 10000 + hand_2d[0, 0]
         else:
             return hand_2d[0, 0]
 

@@ -1,4 +1,4 @@
-// g++ -shared -o PokerRL/game/_/cpp_wrappers/lib_numeral211_luts.so -fPIC Numeral211CppTool/numeral211_luts.cpp
+// g++ -shared -o PokerRL/game/_/cpp_wrappers/lib_numeral211_luts.so -fPIC Numeral211CppTool/numeral211_luts.cpp -std=c++17
 
 #include <cstdint>
 #include <algorithm>

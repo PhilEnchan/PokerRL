@@ -4,7 +4,7 @@
 import numpy as np
 
 from PokerRL.game.Poker import Poker
-
+from itertools import chain
 
 class PokerRange:
     """
@@ -90,7 +90,6 @@ class PokerRange:
             return arr
 
         # filter not-dealt-cards
-        lut_holder.get_1d_cards(cards_2d=board_2d)
         blocked_cards_1d = np.array(
             [c for c in lut_holder.get_1d_cards(cards_2d=board_2d) if c != Poker.CARD_NOT_DEALT_TOKEN_1D])
 
@@ -99,21 +98,31 @@ class PokerRange:
             return arr
 
         elif rules.N_HOLE_CARDS == 2:
-            hands = []
-
-            for c in blocked_cards_1d:
-                for c1 in range(0, c):
-                    hands.append(lut_holder.get_range_idx_from_hole_cards(
-                        lut_holder.get_2d_cards(np.array([c1, c], dtype=np.int8))))
-                for c2 in range(c + 1, rules.N_CARDS_IN_DECK):
-                    hands.append(lut_holder.get_range_idx_from_hole_cards(
-                        lut_holder.get_2d_cards(np.array([c, c2], dtype=np.int8))))
-
-            blocked_idxs = np.unique(np.array(hands))
+            board_used_cards = lut_holder.get_1d_cards(board_2d)
+            blocked_idxs = set()
+            blocked_idxs.update(chain.from_iterable(
+                lut_holder.LUT_CARD_IN_WHAT_RANGE_IDXS[c]
+                for c in board_used_cards if c != Poker.CARD_NOT_DEALT_TOKEN_1D
+            ))
+            blocked_idxs = np.array(list(blocked_idxs))
             arr = np.delete(arr, obj=blocked_idxs)
-
             return arr
+        # elif rules.N_HOLE_CARDS == 2:
+        #     hands = []
 
+        #     for c in blocked_cards_1d:
+        #         for c1 in range(0, c):
+        #             hands.append(lut_holder.get_range_idx_from_hole_cards(
+        #                 lut_holder.get_2d_cards(np.array([c1, c], dtype=np.int8))))
+        #         for c2 in range(c + 1, rules.N_CARDS_IN_DECK):
+        #             hands.append(lut_holder.get_range_idx_from_hole_cards(
+        #                 lut_holder.get_2d_cards(np.array([c, c2], dtype=np.int8))))
+
+        #     blocked_idxs = np.unique(np.array(hands))
+        #     arr = np.delete(arr, obj=blocked_idxs)
+
+        #     return arr
+            
         else:
             raise NotImplementedError("self.N_HOLE_CARDS > 2:  " + str(rules.N_HOLE_CARDS))
 

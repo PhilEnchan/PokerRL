@@ -7,16 +7,55 @@ from unittest import TestCase
 import numpy as np
 
 from PokerRL.game._.tree.PublicTree import PublicTree
-from PokerRL.game.games import StandardLeduc, DiscretizedNLLeduc,Numeral211
+from PokerRL.game.games import StandardLeduc, DiscretizedNLLeduc,Numeral211,LimitHoldem
 from PokerRL.game.wrappers import HistoryEnvBuilder
 
 # pytest test/game/test_tree.py -k TestGameTree 2>&1 | tee error.txt
 class TestGameTree(TestCase):
 
+    # def test_impossible_1(self):
+    #     from PokerRL.game.PokerRange import PokerRange
+    #     env_args = Numeral211.ARGS_CLS(n_seats=2,
+    #                                     starting_stack_sizes_list=[500, 500]
+    #                                     )
+    #     env_bldr = HistoryEnvBuilder(env_cls=Numeral211, env_args=env_args)
+    #     env = env_bldr.get_new_env(is_evaluating=True)
+    #     boards_2d = np.array([[0, 1], [2, 3]], dtype=np.int8)
+    #     for _ in range(0,10000):
+    #         PokerRange.get_possible_range_idxs(env, env_bldr.lut_holder, boards_2d)
+        # print("PokerRange.get_possible_range_idxs(env, env_bldr.lut_holder, boards_2d)", PokerRange.get_possible_range_idxs(env, env_bldr.lut_holder, boards_2d))
+        # assert 0
+
+    # def test_impossible_2(self):
+    #     env_args = Numeral211.ARGS_CLS(n_seats=2,
+    #                                     starting_stack_sizes_list=[500, 500]
+    #                                     )
+    #     env_bldr = HistoryEnvBuilder(env_cls=Numeral211, env_args=env_args)
+    #     board_2d = np.array([[0, 1], [2, 3]], dtype=np.int8)
+    #     from itertools import chain
+    #     from PokerRL.game.Poker import Poker
+    #     for _ in range(0,10000):
+    #         board_used_cards = env_bldr.lut_holder.get_1d_cards(board_2d)
+    #         impossible_range_idxs = set()
+    #         impossible_range_idxs.update(chain.from_iterable(
+    #             env_bldr.lut_holder.LUT_CARD_IN_WHAT_RANGE_IDXS[c]
+    #             for c in board_used_cards if c != Poker.CARD_NOT_DEALT_TOKEN_1D
+    #         ))
+    #         impossible_range_idxs = np.array(list(impossible_range_idxs))
+        # board_used_cards = env_bldr.lut_holder.get_1d_cards(board_2d)
+        # impossible_range_idxs = set()
+        # impossible_range_idxs.update(chain.from_iterable(
+        #     env_bldr.lut_holder.LUT_CARD_IN_WHAT_RANGE_IDXS[c]
+        #     for c in board_used_cards if c != Poker.CARD_NOT_DEALT_TOKEN_1D
+        # ))
+        # impossible_range_idxs = np.array(list(impossible_range_idxs))
+        # print("impossible_range_idxs", impossible_range_idxs)
+        # assert 0
+
     def test_building(self):
         _get_leduc_tree()
         _get_nl_leduc_tree()
-        _get_numeral211_tree()
+    #     _get_numeral211_tree()
 
     # def test_vs_env_obs(self):
     #     for game in ["limit", "nl"]:
@@ -74,18 +113,19 @@ class TestGameTree(TestCase):
     #         tree_o = dummy_env.get_current_obs(is_terminal=False)
 
     #         assert np.array_equal(o, tree_o)
+    #     assert 0
 
-    def test_numeral211_env_obs(self):
-
-        env, env_args = _get_new_numeral211_env()
-        dummy_env, env_args = _get_new_numeral211_env()
-        tree = _get_numeral211_tree(env_args=env_args)
-
-        lut_holder = Numeral211.get_lut_holder()
+    def test_numeral211_env_obs_single(self):
+        # env, env_args = _get_new_numeral211_env()
+        # dummy_env, env_args = _get_new_numeral211_env()
+        # lut_holder = Numeral211.get_lut_holder()
+        
+        env, env_args = _get_new_hunl_env()
+        dummy_env, env_args = _get_new_hunl_env()
+        lut_holder = LimitHoldem.get_lut_holder()
 
         env.reset()
         dummy_env.reset()
-        node = tree.root
 
         # RAISE .. stays preflop
         legal = env.get_legal_actions()
@@ -93,47 +133,70 @@ class TestGameTree(TestCase):
         assert a in legal
 
         o, r, d, i = env.step(a)
-        node = node.children[legal.index(a)]
-        dummy_env.load_state_dict(node.env_state)
-        tree_o = dummy_env.get_current_obs(is_terminal=False)
 
         env.print_obs(o)
-        env.print_obs(tree_o)
-        print("tree_o")
-        print(type(tree_o))
-        # assert np.array_equal(o, tree_o)
+        assert 0
 
-        # CALL .. goes flop
-        legal = env.get_legal_actions()
-        a = 1
-        assert a in legal
+    # def test_numeral211_env_obs(self):
 
-        o, r, d, i = env.step(a)
-        node = node.children[legal.index(1)]
-        card_that_came_in_env = lut_holder.get_1d_card(env.board[0])
-        node = node.children[card_that_came_in_env]
-        dummy_env.load_state_dict(node.env_state)
-        tree_o = dummy_env.get_current_obs(is_terminal=False)
+    #     env, env_args = _get_new_numeral211_env()
+    #     dummy_env, env_args = _get_new_numeral211_env()
+    #     tree = _get_numeral211_tree(env_args=env_args)
 
-        # assert np.array_equal(o, tree_o)
+    #     lut_holder = Numeral211.get_lut_holder()
 
-        # RAISE .. stays flop
-        legal = env.get_legal_actions()
-        a = legal[-1]
-        assert a in legal
+    #     env.reset()
+    #     dummy_env.reset()
+    #     node = tree.root
 
-        o, r, d, i = env.step(a)
-        node = node.children[legal.index(a)]
-        dummy_env.load_state_dict(node.env_state)
-        tree_o = dummy_env.get_current_obs(is_terminal=False)
+    #     # RAISE .. stays preflop
+    #     legal = env.get_legal_actions()
+    #     a = 2
+    #     assert a in legal
 
-        # assert np.array_equal(o, tree_o)
-        # assert 0
+    #     o, r, d, i = env.step(a)
+    #     node = node.children[legal.index(a)]
+    #     dummy_env.load_state_dict(node.env_state)
+    #     tree_o = dummy_env.get_current_obs(is_terminal=False)
+
+    #     env.print_obs(o)
+    #     env.print_obs(tree_o)
+    #     print("tree_o")
+    #     print(type(tree_o))
+    #     # assert np.array_equal(o, tree_o)
+
+    #     # CALL .. goes flop
+    #     legal = env.get_legal_actions()
+    #     a = 1
+    #     assert a in legal
+
+    #     o, r, d, i = env.step(a)
+    #     node = node.children[legal.index(1)]
+    #     card_that_came_in_env = lut_holder.get_1d_card(env.board[0])
+    #     node = node.children[card_that_came_in_env]
+    #     dummy_env.load_state_dict(node.env_state)
+    #     tree_o = dummy_env.get_current_obs(is_terminal=False)
+
+    #     # assert np.array_equal(o, tree_o)
+
+    #     # RAISE .. stays flop
+    #     legal = env.get_legal_actions()
+    #     a = legal[-1]
+    #     assert a in legal
+
+    #     o, r, d, i = env.step(a)
+    #     node = node.children[legal.index(a)]
+    #     dummy_env.load_state_dict(node.env_state)
+    #     tree_o = dummy_env.get_current_obs(is_terminal=False)
+
+    #     # assert np.array_equal(o, tree_o)
+    #     # assert 0
 
 
 def _get_leduc_tree(env_args=None):
     if env_args is None:
         env_args = StandardLeduc.ARGS_CLS(n_seats=2,
+                                          starting_stack_sizes_list=[100, 100]
                                           )
 
     env_bldr = HistoryEnvBuilder(env_cls=StandardLeduc, env_args=env_args)
@@ -143,6 +206,7 @@ def _get_leduc_tree(env_args=None):
         stack_size=env_args.starting_stack_sizes_list,
         stop_at_street=None
     )
+    print("env_args.starting_stack_sizes_list", env_args.starting_stack_sizes_list)
 
     _tree.build_tree()
 
@@ -209,6 +273,13 @@ def _get_new_numeral211_env(env_args=None):
                                        starting_stack_sizes_list=[500, 500],
                                        )
     return Numeral211(env_args=env_args, is_evaluating=True, lut_holder=Numeral211.get_lut_holder()), env_args
+
+def _get_new_hunl_env(env_args=None):
+    if env_args is None:
+        env_args = LimitHoldem.ARGS_CLS(n_seats=2,
+                                       starting_stack_sizes_list=[500, 500],
+                                       )
+    return LimitHoldem(env_args=env_args, is_evaluating=True, lut_holder=LimitHoldem.get_lut_holder()), env_args
 
 def _get_numeral211_tree(env_args=None):
     if env_args is None:

@@ -1,3 +1,15 @@
-Segmentation fault detected!
-Last hand_2d: (8, 2); (1, 0); 
-Last board_2d: (1, 0); (-127, -127); 
+Aborted (SIGABRT) detected!
+Last hand_2d: (4, 3); (5, 1); 
+Last board_2d: (2, 0); (2, 3); 
+Aborted (SIGABRT) detected!
+Last hand_2d: (4, 3); (5, 1); 
+Last board_2d: (2, 0); (2, 3); 
+dat file: 
+Aborted (SIGABRT) detected!
+Last hand_2d: (4, 3); (5, 1); 
+Last board_2d: (2, 0); (2, 3); 
+dat file: /
+Aborted (SIGABRT) detected!
+Last hand_2d: (4, 3); (5, 1); 
+Last board_2d: (2, 0); (2, 3); 
+dat file: /
